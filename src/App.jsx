@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  BookOpen, Flower2, UtensilsCrossed, MonitorPlay, NotebookPen, FlaskConical, Cpu, Sigma,
-  GraduationCap, Gamepad2, Backpack,
+  UtensilsCrossed, GraduationCap, Gamepad2, Backpack,
+  Dumbbell, StretchHorizontal, GlassWater, Pill,
   ChevronLeft, ChevronRight, Flame, RotateCcw, Pause,
 } from "lucide-react";
 import { LocalNotifications } from "@capacitor/local-notifications";
@@ -21,27 +21,18 @@ const C = {
   moonDark: "#0E0D22",
 };
 
-const CENA_HABIT = { key: "cena", label: "Cena", Icon: UtensilsCrossed, color: "#E2704F" };
-const REST_HABITS = [
-  { key: "estudio_noc", label: "Estudio Nocturno", Icon: GraduationCap, color: "#7FB3E0" },
-  { key: "libro", label: "Libro", Icon: BookOpen, color: "#E9945B" },
-  { key: "meditacion", label: "Meditación", Icon: Flower2, color: "#A78BE0" },
+const HABITS = [
+  { key: "cena", label: "Cena", Icon: UtensilsCrossed, color: "#E2704F" },
   { key: "boludeo", label: "Boludeo", Icon: Gamepad2, color: "#C9A227" },
+  { key: "press", label: "Press", Icon: Dumbbell, color: "#E08A3C" },
+  { key: "estiramiento", label: "Estiramiento", Icon: StretchHorizontal, color: "#5FBFA3" },
+  { key: "agua", label: "Cargar Agua", Icon: GlassWater, color: "#6C8EEF" },
+  { key: "pastillas", label: "Pastillas", Icon: Pill, color: "#D96C9E" },
+  { key: "estudio_noc", label: "Estudio Nocturno", Icon: GraduationCap, color: "#7FB3E0" },
   { key: "mochila", label: "Preparar mochila y ropa", Icon: Backpack, color: "#8FBF8F" },
 ];
 
-// Tarea de estudio del día (0 = domingo ... 6 = sábado)
-const DAY_TASKS = {
-  0: { label: "Video clase orga", Icon: MonitorPlay, color: "#6C8EEF" }, // domingo
-  1: { label: "Video clase orga", Icon: MonitorPlay, color: "#6C8EEF" }, // lunes
-  2: { label: "Labo álgebra lineal", Icon: FlaskConical, color: "#E0C15C" }, // martes
-  3: { label: "Guía de orga", Icon: Cpu, color: "#7C9CBF" }, // miércoles
-  4: { label: "Guía de orga", Icon: Cpu, color: "#7C9CBF" }, // jueves
-  5: { label: "Notas ALC", Icon: NotebookPen, color: "#5FBFA3" }, // viernes
-  6: { label: "Guía ALC", Icon: Sigma, color: "#C77DBF" }, // sábado
-};
-
-const habitsForDate = (d) => [CENA_HABIT, { key: "tarea", ...DAY_TASKS[d.getDay()] }, ...REST_HABITS];
+const habitsForDate = () => HABITS;
 
 const STORAGE_KEY = "night_routine_data_v1";
 
