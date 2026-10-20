@@ -440,7 +440,11 @@ export default function App() {
 }
 
 const wrap = {
-  maxWidth: 420, margin: "0 auto", padding: "22px 18px 24px",
+  maxWidth: 420, margin: "0 auto",
+  paddingTop: "calc(22px + env(safe-area-inset-top))",
+  paddingRight: "calc(18px + env(safe-area-inset-right))",
+  paddingBottom: "calc(24px + env(safe-area-inset-bottom))",
+  paddingLeft: "calc(18px + env(safe-area-inset-left))",
   display: "flex", flexDirection: "column", gap: 16,
   background: C.bg, borderRadius: 20, position: "relative", overflow: "hidden",
   fontFamily: "system-ui, sans-serif",
