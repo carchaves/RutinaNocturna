@@ -21,18 +21,23 @@ const C = {
   moonDark: "#0E0D22",
 };
 
-const HABITS = [
+// Slot de ejercicio nocturno que rota con la mañana (ver RutinaMatinal).
+// Ciclo de 3 días desfasado: Press cae cuando dayIndex%3===1; el resto,
+// Estiramiento. Así Press y Calistenia (mañana, %3===0) quedan a >24h.
+const PRESS = { key: "ejercicio", label: "Press", Icon: Dumbbell, color: "#E08A3C" };
+const EST_PM = { key: "ejercicio", label: "Estiramiento", Icon: StretchHorizontal, color: "#5FBFA3" };
+const dayIndex = (d) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+const exercisePM = (d) => (dayIndex(d) % 3 === 1 ? PRESS : EST_PM);
+
+const habitsForDate = (d) => [
   { key: "cena", label: "Cena", Icon: UtensilsCrossed, color: "#E2704F" },
   { key: "boludeo", label: "Boludeo", Icon: Gamepad2, color: "#C9A227" },
-  { key: "press", label: "Press", Icon: Dumbbell, color: "#E08A3C" },
-  { key: "estiramiento", label: "Estiramiento", Icon: StretchHorizontal, color: "#5FBFA3" },
+  exercisePM(d),
   { key: "agua", label: "Cargar Agua", Icon: GlassWater, color: "#6C8EEF" },
   { key: "pastillas", label: "Pastillas", Icon: Pill, color: "#D96C9E" },
   { key: "estudio_noc", label: "Estudio Nocturno", Icon: GraduationCap, color: "#7FB3E0" },
   { key: "mochila", label: "Preparar mochila y ropa", Icon: Backpack, color: "#8FBF8F" },
 ];
-
-const habitsForDate = () => HABITS;
 
 const STORAGE_KEY = "night_routine_data_v1";
 
