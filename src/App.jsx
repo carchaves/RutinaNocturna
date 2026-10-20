@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   BookOpen, Flower2, UtensilsCrossed, MonitorPlay, NotebookPen, FlaskConical, Cpu, Sigma,
+  GraduationCap, Gamepad2, Backpack,
   ChevronLeft, ChevronRight, Flame, RotateCcw, Pause,
 } from "lucide-react";
 import { LocalNotifications } from "@capacitor/local-notifications";
@@ -22,8 +23,11 @@ const C = {
 
 const CENA_HABIT = { key: "cena", label: "Cena", Icon: UtensilsCrossed, color: "#E2704F" };
 const REST_HABITS = [
+  { key: "estudio_noc", label: "Estudio Nocturno", Icon: GraduationCap, color: "#7FB3E0" },
   { key: "libro", label: "Libro", Icon: BookOpen, color: "#E9945B" },
   { key: "meditacion", label: "Meditación", Icon: Flower2, color: "#A78BE0" },
+  { key: "boludeo", label: "Boludeo", Icon: Gamepad2, color: "#C9A227" },
+  { key: "mochila", label: "Preparar mochila y ropa", Icon: Backpack, color: "#8FBF8F" },
 ];
 
 // Tarea de estudio del día (0 = domingo ... 6 = sábado)
