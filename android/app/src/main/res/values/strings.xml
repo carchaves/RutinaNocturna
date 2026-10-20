@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Rutina nocturna</string>
+    <string name="title_activity_main">Rutina nocturna</string>
+    <string name="package_name">com.raflos.rutinanocturna</string>
+    <string name="custom_url_scheme">com.raflos.rutinanocturna</string>
+</resources>

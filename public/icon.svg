@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="moon" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFF7E0" />
+      <stop offset="100%" stop-color="#F0C862" />
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="#14132B" />
+  <circle cx="64" cy="64" r="38" fill="#0E0D22" stroke="#332F5C" stroke-width="2" />
+  <path d="M 84 34 A 38 38 0 1 0 84 94 A 30 30 0 1 1 84 34 Z" fill="url(#moon)" />
+</svg>
