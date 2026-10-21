@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  UtensilsCrossed, GraduationCap, Gamepad2, Backpack,
+  UtensilsCrossed, GraduationCap, Utensils, Backpack,
   Dumbbell, StretchHorizontal, GlassWater, Pill,
   ChevronLeft, ChevronRight, Flame, RotateCcw, Pause,
 } from "lucide-react";
@@ -31,12 +31,12 @@ const exercisePM = (d) => (dayIndex(d) % 3 === 1 ? PRESS : EST_PM);
 
 const habitsForDate = (d) => [
   { key: "cena", label: "Cena", Icon: UtensilsCrossed, color: "#E2704F" },
-  { key: "boludeo", label: "Boludeo", Icon: Gamepad2, color: "#C9A227" },
+  { key: "boludeo", label: "Lavar los platos", Icon: Utensils, color: "#C9A227" },
   exercisePM(d),
   { key: "agua", label: "Cargar Agua", Icon: GlassWater, color: "#6C8EEF" },
   { key: "pastillas", label: "Pastillas", Icon: Pill, color: "#D96C9E" },
   { key: "estudio_noc", label: "Estudio Nocturno", Icon: GraduationCap, color: "#7FB3E0" },
-  { key: "mochila", label: "Preparar mochila y ropa", Icon: Backpack, color: "#8FBF8F" },
+  { key: "mochila", label: "Despejar escritorio o preparar mochila y ropa", Icon: Backpack, color: "#8FBF8F" },
 ];
 
 const STORAGE_KEY = "night_routine_data_v1";
