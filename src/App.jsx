@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  UtensilsCrossed, GraduationCap, Utensils, Backpack,
+  UtensilsCrossed, GraduationCap, Utensils, Backpack, Eraser,
   Dumbbell, StretchHorizontal, GlassWater, Pill,
   ChevronLeft, ChevronRight, Flame, RotateCcw, Pause,
 } from "lucide-react";
@@ -29,6 +29,19 @@ const EST_PM = { key: "ejercicio", label: "Estiramiento", Icon: StretchHorizonta
 const dayIndex = (d) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
 const exercisePM = (d) => (dayIndex(d) % 3 === 1 ? PRESS : EST_PM);
 
+// Último paso: depende de si AL DÍA SIGUIENTE voy a la oficina.
+// Oficina = lun(1), mié(3), jue(4). Si cambia, editar OFFICE_DOW.
+const OFFICE_DOW = new Set([1, 3, 4]);
+const goesToOfficeNextDay = (d) => {
+  const n = new Date(d);
+  n.setDate(n.getDate() + 1);
+  return OFFICE_DOW.has(n.getDay());
+};
+const mochilaFor = (d) =>
+  goesToOfficeNextDay(d)
+    ? { key: "mochila", label: "Preparar mochila y ropa", Icon: Backpack, color: "#8FBF8F" }
+    : { key: "mochila", label: "Despejar escritorio", Icon: Eraser, color: "#8FBF8F" };
+
 const habitsForDate = (d) => [
   { key: "cena", label: "Cena", Icon: UtensilsCrossed, color: "#E2704F" },
   { key: "boludeo", label: "Lavar los platos", Icon: Utensils, color: "#C9A227" },
@@ -36,7 +49,7 @@ const habitsForDate = (d) => [
   { key: "agua", label: "Cargar Agua", Icon: GlassWater, color: "#6C8EEF" },
   { key: "pastillas", label: "Pastillas", Icon: Pill, color: "#D96C9E" },
   { key: "estudio_noc", label: "Estudio Nocturno", Icon: GraduationCap, color: "#7FB3E0" },
-  { key: "mochila", label: "Despejar escritorio o preparar mochila y ropa", Icon: Backpack, color: "#8FBF8F" },
+  mochilaFor(d),
 ];
 
 const STORAGE_KEY = "night_routine_data_v1";
