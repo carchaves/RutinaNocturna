@@ -30,12 +30,25 @@ const dayIndex = (d) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.get
 const exercisePM = (d) => (dayIndex(d) % 3 === 1 ? PRESS : EST_PM);
 
 // Último paso: depende de si AL DÍA SIGUIENTE voy a la oficina.
-// Oficina = lun(1), mié(3), jue(4). Si cambia, editar OFFICE_DOW.
-const OFFICE_DOW = new Set([1, 3, 4]);
+// Oficina por defecto: jueves (4). Puede cambiar semana a semana; para esas
+// semanas agregar overrides por fecha ISO (YYYY-MM-DD): true = ese día SÍ voy,
+// false = ese día no voy (aunque sea jueves).
+const OFFICE_DOW = new Set([4]);
+const OFFICE_OVERRIDES = {
+  // Semana del 20/10/2026: esta semana voy el viernes en vez del jueves.
+  "2026-10-22": false,
+  "2026-10-23": true,
+};
+const isoDay = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const isOfficeDay = (d) => {
+  const o = OFFICE_OVERRIDES[isoDay(d)];
+  return o !== undefined ? o : OFFICE_DOW.has(d.getDay());
+};
 const goesToOfficeNextDay = (d) => {
   const n = new Date(d);
   n.setDate(n.getDate() + 1);
-  return OFFICE_DOW.has(n.getDay());
+  return isOfficeDay(n);
 };
 const mochilaFor = (d) =>
   goesToOfficeNextDay(d)
