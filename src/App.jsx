@@ -60,9 +60,9 @@ const habitsForDate = (d) => [
   { key: "boludeo", label: "Lavar los platos", Icon: Utensils, color: "#C9A227" },
   exercisePM(d),
   { key: "agua", label: "Cargar Agua", Icon: GlassWater, color: "#6C8EEF" },
-  { key: "pastillas", label: "Pastillas", Icon: Pill, color: "#D96C9E" },
   { key: "estudio_noc", label: "Estudio Nocturno", Icon: GraduationCap, color: "#7FB3E0" },
   mochilaFor(d),
+  { key: "pastillas", label: "Pastillas", Icon: Pill, color: "#D96C9E" },
 ];
 
 const STORAGE_KEY = "night_routine_data_v1";
