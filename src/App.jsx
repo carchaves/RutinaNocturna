@@ -140,7 +140,13 @@ function Moon({ size, fraction, id }) {
 export default function App() {
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(true);
-  const today = useMemo(() => new Date(), []);
+  // El "día" de la rutina nocturna arranca a las 03:00: si abro la app entre
+  // medianoche y las 3 AM, sigo viendo el día anterior (me quedo despierto hasta tarde).
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(d.getHours() - 3);
+    return d;
+  }, []);
   const [selected, setSelected] = useState(toKey(today));
   const [weekBase, setWeekBase] = useState(startOfWeek(today));
 
