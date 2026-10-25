@@ -1,0 +1,12 @@
+{
+  "name": "Rutina nocturna",
+  "short_name": "Rutina nocturna",
+  "description": "Seguimiento de habitos nocturnos: proyecto, meditacion y lectura.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#14132B",
+  "theme_color": "#14132B",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

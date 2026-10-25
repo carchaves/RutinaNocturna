@@ -1,0 +1,10 @@
+{
+	"appId": "com.raflos.rutinanocturna",
+	"appName": "Rutina nocturna",
+	"webDir": "dist",
+	"plugins": {
+		"CapacitorUpdater": {
+			"autoUpdate": false
+		}
+	}
+}
