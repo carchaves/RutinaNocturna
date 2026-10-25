@@ -21,19 +21,25 @@ const C = {
   moonDark: "#0E0D22",
 };
 
-// Slot de ejercicio nocturno que rota con la mañana (ver RutinaMatinal).
-// Ciclo de 3 días desfasado: Press cae cuando dayIndex%3===1; el resto,
-// Estiramiento. Así Press y Calistenia (mañana, %3===0) quedan a >24h.
+// Todo el ejercicio fuerte es de noche: DÍA SÍ / DÍA NO, alternando
+// Calistenia y Press. Los días sin ejercicio (y los de oficina) => Estiramiento.
+// dayIndex par = día de ejercicio; alterna Calistenia/Press con floor(i/2)%2.
+const CAL_PM = { key: "ejercicio", label: "Calistenia", Icon: Dumbbell, color: "#E08A3C" };
 const PRESS = { key: "ejercicio", label: "Press", Icon: Dumbbell, color: "#E08A3C" };
 const EST_PM = { key: "ejercicio", label: "Estiramiento", Icon: StretchHorizontal, color: "#5FBFA3" };
 const dayIndex = (d) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
-const exercisePM = (d) => (dayIndex(d) % 3 === 1 ? PRESS : EST_PM);
+const exercisePM = (d) => {
+  if (isOfficeDay(d)) return EST_PM;           // día de oficina: descanso (estiramiento)
+  const i = dayIndex(d);
+  if (i % 2 !== 0) return EST_PM;              // día no: descanso
+  return Math.floor(i / 2) % 2 === 0 ? CAL_PM : PRESS; // día sí: alterna cal/press
+};
 
 // Último paso: depende de si AL DÍA SIGUIENTE voy a la oficina.
 // Oficina por defecto: jueves (4). Puede cambiar semana a semana; para esas
 // semanas agregar overrides por fecha ISO (YYYY-MM-DD): true = ese día SÍ voy,
 // false = ese día no voy (aunque sea jueves).
-const OFFICE_DOW = new Set([4]);
+const OFFICE_DOW = new Set([1, 3, 4]);
 const OFFICE_OVERRIDES = {
   // Semana del 20/10/2026: esta semana voy el viernes en vez del jueves.
   "2026-10-22": false,
