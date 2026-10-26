@@ -39,7 +39,7 @@ const exercisePM = (d) => {
 // Oficina por defecto: jueves (4). Puede cambiar semana a semana; para esas
 // semanas agregar overrides por fecha ISO (YYYY-MM-DD): true = ese día SÍ voy,
 // false = ese día no voy (aunque sea jueves).
-const OFFICE_DOW = new Set([1, 3, 4]);
+const OFFICE_DOW = new Set([5]);
 const OFFICE_OVERRIDES = {
   // Semana del 20/10/2026: esta semana voy el viernes en vez del jueves.
   "2026-10-22": false,
