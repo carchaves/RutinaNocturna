@@ -3,6 +3,7 @@ import {
   UtensilsCrossed, GraduationCap, Utensils, Backpack, Eraser,
   Dumbbell, StretchHorizontal, GlassWater, Pill,
   ChevronLeft, ChevronRight, Flame, RotateCcw, Pause,
+  Plus, Trash2, X,
 } from "lucide-react";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { AppLauncher } from "@capacitor/app-launcher";
@@ -64,7 +65,7 @@ const goesToOfficeNextDay = (d) => {
 };
 const mochilaFor = (d) =>
   goesToOfficeNextDay(d)
-    ? { key: "mochila", label: "Preparar mochila y ropa", Icon: Backpack, color: "#8FBF8F" }
+    ? { key: "mochila", label: "Preparar mochila y ropa", Icon: Backpack, color: "#8FBF8F", modal: true }
     : { key: "mochila", label: "Despejar escritorio", Icon: Eraser, color: "#8FBF8F" };
 
 const habitsForDate = (d) => [
@@ -78,6 +79,15 @@ const habitsForDate = (d) => [
 ];
 
 const STORAGE_KEY = "night_routine_data_v1";
+const BAG_KEY = "night_backpack_items_v1";
+
+// Ítems por defecto de la mochila/ropa (lista editable desde la app).
+const DEFAULT_BAG = [
+  "Notebook", "Cargador", "Ropa del día", "Botella de agua", "Llaves", "Auriculares",
+].map((label, i) => ({ id: `d${i}`, label }));
+
+// Un ítem de mochila marcado del día se guarda como `mochila_<id>` dentro del día.
+const bagKeyFor = (id) => `mochila_${id}`;
 
 // -- Almacenamiento local (localStorage) --------------------------
 const storage = {
@@ -151,6 +161,9 @@ function Moon({ size, fraction, id }) {
 
 export default function App() {
   const [data, setData] = useState({});
+  const [bagItems, setBagItems] = useState(DEFAULT_BAG);
+  const [bagOpen, setBagOpen] = useState(false);
+  const [newItem, setNewItem] = useState("");
   const [loading, setLoading] = useState(true);
   // El "día" de la rutina nocturna arranca a las 03:00: si abro la app entre
   // medianoche y las 3 AM, sigo viendo el día anterior (me quedo despierto hasta tarde).
@@ -178,6 +191,11 @@ export default function App() {
       try {
         const res = await storage.get(STORAGE_KEY);
         if (res && res.value) setData(JSON.parse(res.value));
+        const bag = await storage.get(BAG_KEY);
+        if (bag && bag.value) {
+          const parsed = JSON.parse(bag.value);
+          if (Array.isArray(parsed)) setBagItems(parsed);
+        }
       } catch (e) {
         // primera vez: sin datos
       } finally {
@@ -194,12 +212,47 @@ export default function App() {
     }
   };
 
+  const saveBag = async (next) => {
+    setBagItems(next);
+    try { await storage.set(BAG_KEY, JSON.stringify(next)); } catch (e) {}
+  };
+
+  // "Preparar mochila y ropa" se completa cuando todos sus ítems están marcados ese día.
+  const isDone = (key, habit) => {
+    const h = data[key] || {};
+    if (habit.modal) {
+      if (bagItems.length === 0) return false;
+      return bagItems.every((it) => h[bagKeyFor(it.id)]);
+    }
+    return !!h[habit.key];
+  };
+
   const toggle = (habitKey) => {
     const cur = data[selected] || {};
     const nextNight = { ...cur, [habitKey]: !cur[habitKey] };
     const next = { ...data, [selected]: nextNight };
     setData(next);
     save(next);
+  };
+
+  const toggleBagItem = (id) => {
+    const cur = data[selected] || {};
+    const k = bagKeyFor(id);
+    const nextNight = { ...cur, [k]: !cur[k] };
+    const next = { ...data, [selected]: nextNight };
+    setData(next);
+    save(next);
+  };
+
+  const addBagItem = () => {
+    const label = newItem.trim();
+    if (!label) return;
+    saveBag([...bagItems, { id: `i${Date.now()}`, label }]);
+    setNewItem("");
+  };
+
+  const removeBagItem = (id) => {
+    saveBag(bagItems.filter((it) => it.id !== id));
   };
 
   // -- Temporizador de lectura (cuenta regresiva) ---------------------
@@ -268,9 +321,8 @@ export default function App() {
   }, [tick]);
 
   const countFor = (key) => {
-    const h = data[key] || {};
     const habits = habitsForDate(new Date(key + "T12:00:00"));
-    return habits.reduce((n, x) => n + (h[x.key] ? 1 : 0), 0);
+    return habits.reduce((n, x) => n + (isDone(key, x) ? 1 : 0), 0);
   };
   const totalFor = (key) => habitsForDate(new Date(key + "T12:00:00")).length;
 
@@ -352,17 +404,21 @@ export default function App() {
 
       {/* hábitos */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8, position: "relative", zIndex: 1 }}>
-        {selHabits.map(({ key, label, Icon, color, launch, launchLabel }) => {
-          const done = !!(data[selected] && data[selected][key]);
+        {selHabits.map((habit) => {
+          const { key, label, Icon, color, modal, launch, launchLabel } = habit;
+          const done = isDone(selected, habit);
           const isLibro = key === "libro";
           const timerRunning = isLibro && timer.running && timer.dateKey === selected;
-          const act = () => (launch ? openApp(launch) : toggle(key));
+          const act = () => (modal ? setBagOpen(true) : launch ? openApp(launch) : toggle(key));
+          const bagSub = modal
+            ? `${bagItems.filter((it) => data[selected] && data[selected][bagKeyFor(it.id)]).length}/${bagItems.length} ítems`
+            : null;
           return (
             <div
               key={key}
               className="nr-tap nr-row"
-              role={launch ? "button" : "checkbox"}
-              aria-checked={launch ? undefined : done}
+              role={modal || launch ? "button" : "checkbox"}
+              aria-checked={modal || launch ? undefined : done}
               tabIndex={0}
               onClick={act}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); act(); } }}
@@ -378,6 +434,7 @@ export default function App() {
               <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
                 <span style={{ color: C.cream, fontSize: 16, fontFamily: "system-ui", opacity: done ? 1 : 0.85 }}>{label}</span>
                 {launch && <span style={{ color: C.muted, fontSize: 12, fontFamily: "system-ui" }}>{launchLabel}</span>}
+                {modal && <span style={{ color: C.muted, fontSize: 12, fontFamily: "system-ui" }}>{bagSub}</span>}
                 {isLibro && (
                   timerRunning ? (
                     <span
@@ -494,6 +551,106 @@ export default function App() {
           <RotateCcw size={15} color={C.muted} />
         </button>
       </div>
+
+      {/* pop-up: lista de la mochila y ropa (editable) */}
+      {bagOpen && (
+        <div
+          onClick={() => setBagOpen(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 10,
+            background: "rgba(10,9,26,.6)", display: "flex",
+            alignItems: "flex-end", justifyContent: "center",
+            padding: "0 0 env(safe-area-inset-bottom)",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%", maxWidth: 420, background: C.bg,
+              borderTopLeftRadius: 22, borderTopRightRadius: 22,
+              border: `1px solid ${C.border}`, borderBottom: "none",
+              padding: "16px 18px calc(20px + env(safe-area-inset-bottom))",
+              maxHeight: "80vh", display: "flex", flexDirection: "column", gap: 12,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ display: "grid", placeItems: "center", width: 34, height: 34, borderRadius: 10, background: "#8FBF8F" }}>
+                <Backpack size={18} color={C.bg} strokeWidth={2} />
+              </span>
+              <span style={{ flex: 1, fontFamily: "'Iowan Old Style','Palatino',Georgia,serif", fontSize: 19, color: C.cream }}>
+                Preparar mochila y ropa
+              </span>
+              <button className="nr-tap" aria-label="Cerrar" onClick={() => setBagOpen(false)} style={{ ...navBtn, width: 32, height: 32 }}>
+                <X size={16} color={C.muted} />
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowY: "auto" }}>
+              {bagItems.length === 0 && (
+                <div style={{ color: C.muted, fontSize: 14, fontFamily: "system-ui", padding: "8px 2px" }}>
+                  Agregá lo que no te puede faltar.
+                </div>
+              )}
+              {bagItems.map((it) => {
+                const checked = !!(data[selected] && data[selected][bagKeyFor(it.id)]);
+                return (
+                  <div
+                    key={it.id}
+                    className="nr-row"
+                    style={{
+                      display: "flex", alignItems: "center", gap: 12,
+                      padding: "11px 12px", borderRadius: 12,
+                      background: C.panel, border: `1px solid ${checked ? "#8FBF8F" : C.border}`,
+                    }}
+                  >
+                    <span
+                      className="nr-tap"
+                      role="checkbox" aria-checked={checked} tabIndex={0}
+                      onClick={() => toggleBagItem(it.id)}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleBagItem(it.id); } }}
+                      style={{ flex: 1, display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}
+                    >
+                      <span style={{
+                        width: 22, height: 22, borderRadius: 999,
+                        border: `2px solid ${checked ? "#8FBF8F" : C.border}`,
+                        background: checked ? "#8FBF8F" : "transparent",
+                        display: "grid", placeItems: "center", transition: "all .2s", flexShrink: 0,
+                      }}>
+                        {checked && (
+                          <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 6.3 5 8.7l4.5-5" fill="none" stroke={C.bg} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        )}
+                      </span>
+                      <span style={{ color: C.cream, fontSize: 15, fontFamily: "system-ui", opacity: checked ? 1 : 0.9, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.label}</span>
+                    </span>
+                    <button className="nr-tap" aria-label={`Quitar ${it.label}`} onClick={() => removeBagItem(it.id)} style={{ ...navBtn, width: 30, height: 30, border: "none" }}>
+                      <Trash2 size={15} color={C.muted} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); addBagItem(); }} style={{ display: "flex", gap: 8, marginTop: 2 }}>
+              <input
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                placeholder="Agregar ítem…"
+                style={{
+                  flex: 1, padding: "11px 12px", borderRadius: 12,
+                  border: `1px solid ${C.border}`, background: C.panel,
+                  color: C.cream, fontSize: 15, fontFamily: "system-ui", outline: "none",
+                }}
+              />
+              <button type="submit" className="nr-tap" aria-label="Agregar" style={{
+                width: 46, borderRadius: 12, border: "none", background: "#8FBF8F",
+                display: "grid", placeItems: "center",
+              }}>
+                <Plus size={20} color={C.bg} />
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
