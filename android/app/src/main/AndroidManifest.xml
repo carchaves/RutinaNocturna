@@ -33,4 +33,9 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Poder abrir la app de rutinas de ejercicio -->
+    <queries>
+        <package android:name="com.rutina.ejercicio" />
+    </queries>
 </manifest>

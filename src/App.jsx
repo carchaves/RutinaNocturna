@@ -5,6 +5,13 @@ import {
   ChevronLeft, ChevronRight, Flame, RotateCcw, Pause,
 } from "lucide-react";
 import { LocalNotifications } from "@capacitor/local-notifications";
+import { AppLauncher } from "@capacitor/app-launcher";
+
+// Paquete de la app RutinaEjercicio (se abre al tocar el hábito de ejercicio).
+const EXERCISE_APP = "com.rutina.ejercicio";
+const openExerciseApp = async () => {
+  try { await AppLauncher.openUrl({ url: EXERCISE_APP }); } catch (e) { /* no instalada */ }
+};
 
 const READ_TIMER_NOTIF_ID = 1001;
 const READ_TIMER_MIN = 30;
@@ -24,9 +31,9 @@ const C = {
 // Todo el ejercicio fuerte es de noche: DÍA SÍ / DÍA NO, alternando
 // Calistenia y Press. Los días sin ejercicio (y los de oficina) => Estiramiento.
 // dayIndex par = día de ejercicio; alterna Calistenia/Press con floor(i/2)%2.
-const CAL_PM = { key: "ejercicio", label: "Calistenia", Icon: Dumbbell, color: "#E08A3C" };
-const PRESS = { key: "ejercicio", label: "Press", Icon: Dumbbell, color: "#E08A3C" };
-const EST_PM = { key: "ejercicio", label: "Estiramiento", Icon: StretchHorizontal, color: "#5FBFA3" };
+const CAL_PM = { key: "ejercicio", label: "Calistenia", Icon: Dumbbell, color: "#E08A3C", launch: true };
+const PRESS = { key: "ejercicio", label: "Press", Icon: Dumbbell, color: "#E08A3C", launch: true };
+const EST_PM = { key: "ejercicio", label: "Estiramiento", Icon: StretchHorizontal, color: "#5FBFA3", launch: true };
 const dayIndex = (d) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
 const exercisePM = (d) => {
   if (isOfficeDay(d)) return EST_PM;           // día de oficina: descanso (estiramiento)
@@ -346,19 +353,20 @@ export default function App() {
 
       {/* hábitos */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8, position: "relative", zIndex: 1 }}>
-        {selHabits.map(({ key, label, Icon, color }) => {
+        {selHabits.map(({ key, label, Icon, color, launch }) => {
           const done = !!(data[selected] && data[selected][key]);
           const isLibro = key === "libro";
           const timerRunning = isLibro && timer.running && timer.dateKey === selected;
+          const act = () => (launch ? openExerciseApp() : toggle(key));
           return (
             <div
               key={key}
               className="nr-tap nr-row"
-              role="checkbox"
-              aria-checked={done}
+              role={launch ? "button" : "checkbox"}
+              aria-checked={launch ? undefined : done}
               tabIndex={0}
-              onClick={() => toggle(key)}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(key); } }}
+              onClick={act}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); act(); } }}
               style={{
                 display: "flex", alignItems: "center", gap: 12,
                 padding: "13px 14px", borderRadius: 14,
@@ -370,6 +378,7 @@ export default function App() {
               </span>
               <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
                 <span style={{ color: C.cream, fontSize: 16, fontFamily: "system-ui", opacity: done ? 1 : 0.85 }}>{label}</span>
+                {launch && <span style={{ color: C.muted, fontSize: 12, fontFamily: "system-ui" }}>Abrir app de ejercicio</span>}
                 {isLibro && (
                   timerRunning ? (
                     <span
@@ -411,11 +420,19 @@ export default function App() {
                   )
                 )}
               </span>
-              <span style={{
+              <span
+                className={launch ? "nr-tap" : undefined}
+                role={launch ? "checkbox" : undefined}
+                aria-checked={launch ? done : undefined}
+                tabIndex={launch ? 0 : undefined}
+                aria-label={launch ? `Marcar ${label} como hecho` : undefined}
+                onClick={launch ? (e) => { e.stopPropagation(); toggle(key); } : undefined}
+                onKeyDown={launch ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggle(key); } } : undefined}
+                style={{
                 width: 24, height: 24, borderRadius: 999,
                 border: `2px solid ${done ? color : C.border}`,
                 background: done ? color : "transparent",
-                display: "grid", placeItems: "center", transition: "all .2s",
+                display: "grid", placeItems: "center", transition: "all .2s", flexShrink: 0,
               }}>
                 {done && (
                   <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 6.3 5 8.7l4.5-5" fill="none" stroke={C.bg} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
