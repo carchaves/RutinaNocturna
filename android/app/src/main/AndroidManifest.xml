@@ -37,5 +37,6 @@
     <!-- Poder abrir la app de rutinas de ejercicio -->
     <queries>
         <package android:name="com.rutina.ejercicio" />
+        <package android:name="cc.forestapp" />
     </queries>
 </manifest>

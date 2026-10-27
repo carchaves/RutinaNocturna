@@ -7,10 +7,9 @@ import {
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { AppLauncher } from "@capacitor/app-launcher";
 
-// Paquete de la app RutinaEjercicio (se abre al tocar el hábito de ejercicio).
-const EXERCISE_APP = "com.rutina.ejercicio";
-const openExerciseApp = async () => {
-  try { await AppLauncher.openUrl({ url: EXERCISE_APP }); } catch (e) { /* no instalada */ }
+// Abrir otra app por package: ejercicio (com.rutina.ejercicio) o Forest (cc.forestapp).
+const openApp = async (pkg) => {
+  try { await AppLauncher.openUrl({ url: pkg }); } catch (e) { /* no instalada */ }
 };
 
 const READ_TIMER_NOTIF_ID = 1001;
@@ -31,9 +30,9 @@ const C = {
 // Todo el ejercicio fuerte es de noche: DÍA SÍ / DÍA NO, alternando
 // Calistenia y Press. Los días sin ejercicio (y los de oficina) => Estiramiento.
 // dayIndex par = día de ejercicio; alterna Calistenia/Press con floor(i/2)%2.
-const CAL_PM = { key: "ejercicio", label: "Calistenia", Icon: Dumbbell, color: "#E08A3C", launch: true };
-const PRESS = { key: "ejercicio", label: "Press", Icon: Dumbbell, color: "#E08A3C", launch: true };
-const EST_PM = { key: "ejercicio", label: "Estiramiento", Icon: StretchHorizontal, color: "#5FBFA3", launch: true };
+const CAL_PM = { key: "ejercicio", label: "Calistenia", Icon: Dumbbell, color: "#E08A3C", launch: "com.rutina.ejercicio", launchLabel: "Abrir app de ejercicio" };
+const PRESS = { key: "ejercicio", label: "Press", Icon: Dumbbell, color: "#E08A3C", launch: "com.rutina.ejercicio", launchLabel: "Abrir app de ejercicio" };
+const EST_PM = { key: "ejercicio", label: "Estiramiento", Icon: StretchHorizontal, color: "#5FBFA3", launch: "com.rutina.ejercicio", launchLabel: "Abrir app de ejercicio" };
 const dayIndex = (d) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
 const exercisePM = (d) => {
   if (isOfficeDay(d)) return EST_PM;           // día de oficina: descanso (estiramiento)
@@ -73,7 +72,7 @@ const habitsForDate = (d) => [
   { key: "boludeo", label: "Lavar los platos", Icon: Utensils, color: "#C9A227" },
   exercisePM(d),
   { key: "agua", label: "Cargar Agua", Icon: GlassWater, color: "#6C8EEF" },
-  { key: "estudio_noc", label: "Estudio Nocturno", Icon: GraduationCap, color: "#7FB3E0" },
+  { key: "estudio_noc", label: "Estudio Nocturno", Icon: GraduationCap, color: "#7FB3E0", launch: "cc.forestapp", launchLabel: "Abrir Forest" },
   mochilaFor(d),
   { key: "pastillas", label: "Pastillas", Icon: Pill, color: "#D96C9E" },
 ];
@@ -353,11 +352,11 @@ export default function App() {
 
       {/* hábitos */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8, position: "relative", zIndex: 1 }}>
-        {selHabits.map(({ key, label, Icon, color, launch }) => {
+        {selHabits.map(({ key, label, Icon, color, launch, launchLabel }) => {
           const done = !!(data[selected] && data[selected][key]);
           const isLibro = key === "libro";
           const timerRunning = isLibro && timer.running && timer.dateKey === selected;
-          const act = () => (launch ? openExerciseApp() : toggle(key));
+          const act = () => (launch ? openApp(launch) : toggle(key));
           return (
             <div
               key={key}
@@ -378,7 +377,7 @@ export default function App() {
               </span>
               <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
                 <span style={{ color: C.cream, fontSize: 16, fontFamily: "system-ui", opacity: done ? 1 : 0.85 }}>{label}</span>
-                {launch && <span style={{ color: C.muted, fontSize: 12, fontFamily: "system-ui" }}>Abrir app de ejercicio</span>}
+                {launch && <span style={{ color: C.muted, fontSize: 12, fontFamily: "system-ui" }}>{launchLabel}</span>}
                 {isLibro && (
                   timerRunning ? (
                     <span
