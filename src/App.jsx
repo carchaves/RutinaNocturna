@@ -28,19 +28,21 @@ const C = {
   moonDark: "#0E0D22",
 };
 
-// Todo el ejercicio fuerte es de noche: DÍA SÍ / DÍA NO, alternando
-// Calistenia y Press. Los días sin ejercicio (y los de oficina) => Estiramiento.
-// dayIndex par = día de ejercicio; alterna Calistenia/Press con floor(i/2)%2.
+// Ejercicio fuerte de noche, FIJO por día de la semana:
+//   Lun=Calistenia, Mar=Press, Mié=Pierna, Jue=Calistenia, Sáb=Press.
+// Vie y Dom descansan (Estiramiento); esos cinco días ya NO muestran estiramiento.
 const CAL_PM = { key: "ejercicio", label: "Calistenia", Icon: Dumbbell, color: "#E08A3C", launch: "com.rutina.ejercicio", launchLabel: "Abrir app de ejercicio" };
 const PRESS = { key: "ejercicio", label: "Press", Icon: Dumbbell, color: "#E08A3C", launch: "com.rutina.ejercicio", launchLabel: "Abrir app de ejercicio" };
+const PIERNA = { key: "ejercicio", label: "Pierna", Icon: Dumbbell, color: "#E08A3C", launch: "com.rutina.ejercicio", launchLabel: "Abrir app de ejercicio" };
 const EST_PM = { key: "ejercicio", label: "Estiramiento", Icon: StretchHorizontal, color: "#5FBFA3", launch: "com.rutina.ejercicio", launchLabel: "Abrir app de ejercicio" };
-const dayIndex = (d) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
-const exercisePM = (d) => {
-  if (isOfficeDay(d)) return EST_PM;           // día de oficina: descanso (estiramiento)
-  const i = dayIndex(d);
-  if (i % 2 !== 0) return EST_PM;              // día no: descanso
-  return Math.floor(i / 2) % 2 === 0 ? CAL_PM : PRESS; // día sí: alterna cal/press
+const EXERCISE_BY_DOW = {
+  1: CAL_PM,  // lunes
+  2: PRESS,   // martes
+  3: PIERNA,  // miércoles
+  4: CAL_PM,  // jueves
+  6: PRESS,   // sábado
 };
+const exercisePM = (d) => EXERCISE_BY_DOW[d.getDay()] || EST_PM; // vie/dom: estiramiento
 
 // Último paso: depende de si AL DÍA SIGUIENTE voy a la oficina.
 // Oficina por defecto: jueves (4). Puede cambiar semana a semana; para esas
