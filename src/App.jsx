@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   UtensilsCrossed, GraduationCap, Utensils, Backpack, Eraser,
-  Dumbbell, StretchHorizontal, GlassWater, Pill,
+  Dumbbell, GlassWater, Pill,
   ChevronLeft, ChevronRight, Flame, RotateCcw, Pause,
   Plus, Trash2, X,
 } from "lucide-react";
@@ -30,11 +30,10 @@ const C = {
 
 // Ejercicio fuerte de noche, FIJO por día de la semana:
 //   Lun=Calistenia, Mar=Press, Mié=Pierna, Jue=Calistenia, Sáb=Press.
-// Vie y Dom descansan (Estiramiento); esos cinco días ya NO muestran estiramiento.
+// Vie y Dom NO tienen ejercicio (ni estiramiento): descanso total.
 const CAL_PM = { key: "ejercicio", label: "Calistenia", Icon: Dumbbell, color: "#E08A3C", launch: "com.rutina.ejercicio", launchLabel: "Abrir app de ejercicio" };
 const PRESS = { key: "ejercicio", label: "Press", Icon: Dumbbell, color: "#E08A3C", launch: "com.rutina.ejercicio", launchLabel: "Abrir app de ejercicio" };
 const PIERNA = { key: "ejercicio", label: "Pierna", Icon: Dumbbell, color: "#E08A3C", launch: "com.rutina.ejercicio", launchLabel: "Abrir app de ejercicio" };
-const EST_PM = { key: "ejercicio", label: "Estiramiento", Icon: StretchHorizontal, color: "#5FBFA3", launch: "com.rutina.ejercicio", launchLabel: "Abrir app de ejercicio" };
 const EXERCISE_BY_DOW = {
   1: CAL_PM,  // lunes
   2: PRESS,   // martes
@@ -42,7 +41,7 @@ const EXERCISE_BY_DOW = {
   4: CAL_PM,  // jueves
   6: PRESS,   // sábado
 };
-const exercisePM = (d) => EXERCISE_BY_DOW[d.getDay()] || EST_PM; // vie/dom: estiramiento
+const exercisePM = (d) => EXERCISE_BY_DOW[d.getDay()] || null; // vie/dom: sin ejercicio
 
 // Último paso: depende de si AL DÍA SIGUIENTE voy a la oficina.
 // Oficina por defecto: jueves (4). Puede cambiar semana a semana; para esas
@@ -71,9 +70,10 @@ const mochilaFor = (d) =>
     : { key: "mochila", label: "Despejar escritorio", Icon: Eraser, color: "#8FBF8F" };
 
 const habitsForDate = (d) => [
+  // El entrenamiento va primero de todo (antes de la cena) los días que hay.
+  ...(exercisePM(d) ? [exercisePM(d)] : []),
   { key: "cena", label: "Cena", Icon: UtensilsCrossed, color: "#E2704F" },
   { key: "boludeo", label: "Lavar los platos", Icon: Utensils, color: "#C9A227" },
-  exercisePM(d),
   { key: "agua", label: "Cargar Agua", Icon: GlassWater, color: "#6C8EEF" },
   { key: "estudio_noc", label: "Estudio Nocturno", Icon: GraduationCap, color: "#7FB3E0", launch: "cc.forestapp", launchLabel: "Abrir Forest" },
   mochilaFor(d),
