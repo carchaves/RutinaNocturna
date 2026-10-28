@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   UtensilsCrossed, GraduationCap, Utensils, Backpack, Eraser,
-  Dumbbell, GlassWater, Pill,
+  Dumbbell, GlassWater, Pill, Blinds,
   ChevronLeft, ChevronRight, Flame, RotateCcw, Pause,
   Plus, Trash2, X,
 } from "lucide-react";
@@ -72,6 +72,8 @@ const mochilaFor = (d) =>
 const habitsForDate = (d) => [
   // El entrenamiento va primero de todo (antes de la cena) los días que hay.
   ...(exercisePM(d) ? [exercisePM(d)] : []),
+  // Los días de oficina: cerrar persianas después del entrenamiento y antes de la cena.
+  ...(isOfficeDay(d) ? [{ key: "persianas", label: "Cerrar persianas", Icon: Blinds, color: "#9B8CD8" }] : []),
   { key: "cena", label: "Cena", Icon: UtensilsCrossed, color: "#E2704F" },
   { key: "boludeo", label: "Lavar los platos", Icon: Utensils, color: "#C9A227" },
   { key: "agua", label: "Cargar Agua", Icon: GlassWater, color: "#6C8EEF" },
