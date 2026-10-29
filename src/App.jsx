@@ -77,7 +77,7 @@ const habitsForDate = (d) => [
   { key: "cena", label: "Cena", Icon: UtensilsCrossed, color: "#E2704F" },
   { key: "boludeo", label: "Lavar los platos", Icon: Utensils, color: "#C9A227" },
   { key: "agua", label: "Cargar Agua", Icon: GlassWater, color: "#6C8EEF" },
-  { key: "estudio_noc", label: "Estudio Nocturno", Icon: GraduationCap, color: "#7FB3E0", launch: "cc.forestapp", launchLabel: "Abrir Forest" },
+  { key: "estudio_noc", label: "Estudio Nocturno", Icon: GraduationCap, color: "#7FB3E0", launch: "com.checklist.facu", launchLabel: "Abrir Checklist" },
   mochilaFor(d),
   { key: "pastillas", label: "Pastillas", Icon: Pill, color: "#D96C9E" },
 ];
