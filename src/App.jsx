@@ -13,6 +13,30 @@ const openApp = async (pkg) => {
   try { await AppLauncher.openUrl({ url: pkg }); } catch (e) { /* no instalada */ }
 };
 
+// Comida: abrir cámara y compartir la foto al grupo "Comidas" de Telegram.
+// label viaja como texto para que el asistente sepa qué comida es (Cena, etc.).
+const captureMeal = (label) => {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.capture = "environment";
+  input.style.display = "none";
+  input.onchange = async () => {
+    const file = input.files && input.files[0];
+    if (input.parentNode) input.parentNode.removeChild(input);
+    if (!file) return;
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text: label });
+        return;
+      }
+    } catch (e) { /* cancelado o no soportado */ }
+    try { await AppLauncher.openUrl({ url: "tg://" }); } catch (e) { /* sin Telegram */ }
+  };
+  document.body.appendChild(input);
+  input.click();
+};
+
 const READ_TIMER_NOTIF_ID = 1001;
 const READ_TIMER_MIN = 30;
 
@@ -74,7 +98,7 @@ const habitsForDate = (d) => [
   ...(exercisePM(d) ? [exercisePM(d)] : []),
   // Cerrar persianas: todos los días, después del entrenamiento y antes de la cena.
   { key: "persianas", label: "Cerrar persianas", Icon: Blinds, color: "#9B8CD8" },
-  { key: "cena", label: "Cena", Icon: UtensilsCrossed, color: "#E2704F" },
+  { key: "cena", label: "Cena", Icon: UtensilsCrossed, color: "#E2704F", meal: true, mealLabel: "Sacar foto y registrar" },
   { key: "boludeo", label: "Lavar los platos", Icon: Utensils, color: "#C9A227" },
   { key: "agua", label: "Cargar Agua", Icon: GlassWater, color: "#6C8EEF" },
   { key: "estudio_noc", label: "Estudio Nocturno", Icon: GraduationCap, color: "#7FB3E0", launch: "com.checklist.facu", launchLabel: "Abrir Checklist" },
@@ -409,11 +433,11 @@ export default function App() {
       {/* hábitos */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8, position: "relative", zIndex: 1 }}>
         {selHabits.map((habit) => {
-          const { key, label, Icon, color, modal, launch, launchLabel } = habit;
+          const { key, label, Icon, color, modal, launch, launchLabel, meal, mealLabel } = habit;
           const done = isDone(selected, habit);
           const isLibro = key === "libro";
           const timerRunning = isLibro && timer.running && timer.dateKey === selected;
-          const act = () => (modal ? setBagOpen(true) : launch ? openApp(launch) : toggle(key));
+          const act = () => (modal ? setBagOpen(true) : meal ? captureMeal(label) : launch ? openApp(launch) : toggle(key));
           const bagSub = modal
             ? `${bagItems.filter((it) => data[selected] && data[selected][bagKeyFor(it.id)]).length}/${bagItems.length} ítems`
             : null;
@@ -421,8 +445,8 @@ export default function App() {
             <div
               key={key}
               className="nr-tap nr-row"
-              role={modal || launch ? "button" : "checkbox"}
-              aria-checked={modal || launch ? undefined : done}
+              role={modal || launch || meal ? "button" : "checkbox"}
+              aria-checked={modal || launch || meal ? undefined : done}
               tabIndex={0}
               onClick={act}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); act(); } }}
@@ -438,6 +462,7 @@ export default function App() {
               <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
                 <span style={{ color: C.cream, fontSize: 16, fontFamily: "system-ui", opacity: done ? 1 : 0.85 }}>{label}</span>
                 {launch && <span style={{ color: C.muted, fontSize: 12, fontFamily: "system-ui" }}>{launchLabel}</span>}
+                {meal && <span style={{ color: C.muted, fontSize: 12, fontFamily: "system-ui" }}>{mealLabel}</span>}
                 {modal && <span style={{ color: C.muted, fontSize: 12, fontFamily: "system-ui" }}>{bagSub}</span>}
                 {isLibro && (
                   timerRunning ? (
@@ -481,13 +506,13 @@ export default function App() {
                 )}
               </span>
               <span
-                className={launch ? "nr-tap" : undefined}
-                role={launch ? "checkbox" : undefined}
-                aria-checked={launch ? done : undefined}
-                tabIndex={launch ? 0 : undefined}
-                aria-label={launch ? `Marcar ${label} como hecho` : undefined}
-                onClick={launch ? (e) => { e.stopPropagation(); toggle(key); } : undefined}
-                onKeyDown={launch ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggle(key); } } : undefined}
+                className={launch || meal ? "nr-tap" : undefined}
+                role={launch || meal ? "checkbox" : undefined}
+                aria-checked={launch || meal ? done : undefined}
+                tabIndex={launch || meal ? 0 : undefined}
+                aria-label={launch || meal ? `Marcar ${label} como hecho` : undefined}
+                onClick={launch || meal ? (e) => { e.stopPropagation(); toggle(key); } : undefined}
+                onKeyDown={launch || meal ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggle(key); } } : undefined}
                 style={{
                 width: 24, height: 24, borderRadius: 999,
                 border: `2px solid ${done ? color : C.border}`,
