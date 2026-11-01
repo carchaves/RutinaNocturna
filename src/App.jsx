@@ -13,28 +13,15 @@ const openApp = async (pkg) => {
   try { await AppLauncher.openUrl({ url: pkg }); } catch (e) { /* no instalada */ }
 };
 
-// Comida: abrir cámara y compartir la foto al grupo "Comidas" de Telegram.
-// label viaja como texto para que el asistente sepa qué comida es (Cena, etc.).
-const captureMeal = (label) => {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.capture = "environment";
-  input.style.display = "none";
-  input.onchange = async () => {
-    const file = input.files && input.files[0];
-    if (input.parentNode) input.parentNode.removeChild(input);
-    if (!file) return;
-    try {
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], text: label });
-        return;
-      }
-    } catch (e) { /* cancelado o no soportado */ }
-    try { await AppLauncher.openUrl({ url: "tg://" }); } catch (e) { /* sin Telegram */ }
-  };
-  document.body.appendChild(input);
-  input.click();
+// Comida: simplemente abrir Telegram en el chat de Hermes (@HermesHeraldoBot).
+// Charly saca y manda la foto a mano desde ahí. Sin cámara automática, sin token.
+const captureMeal = async () => {
+  try {
+    await AppLauncher.openUrl({ url: "tg://resolve?domain=HermesHeraldoBot" });
+    return;
+  } catch (e) { /* fallback abajo */ }
+  try { await AppLauncher.openUrl({ url: "https://t.me/HermesHeraldoBot" }); }
+  catch (e2) { /* sin Telegram instalado */ }
 };
 
 const READ_TIMER_NOTIF_ID = 1001;
@@ -98,7 +85,7 @@ const habitsForDate = (d) => [
   ...(exercisePM(d) ? [exercisePM(d)] : []),
   // Cerrar persianas: todos los días, después del entrenamiento y antes de la cena.
   { key: "persianas", label: "Cerrar persianas", Icon: Blinds, color: "#9B8CD8" },
-  { key: "cena", label: "Cena", Icon: UtensilsCrossed, color: "#E2704F", meal: true, mealLabel: "Sacar foto y registrar" },
+  { key: "cena", label: "Cena", Icon: UtensilsCrossed, color: "#E2704F", meal: true, mealLabel: "Abrir chat de Hermes" },
   { key: "boludeo", label: "Lavar los platos", Icon: Utensils, color: "#C9A227" },
   { key: "agua", label: "Cargar Agua", Icon: GlassWater, color: "#6C8EEF" },
   { key: "estudio_noc", label: "Estudio Nocturno", Icon: GraduationCap, color: "#7FB3E0", launch: "com.checklist.facu", launchLabel: "Abrir Checklist" },
@@ -437,7 +424,7 @@ export default function App() {
           const done = isDone(selected, habit);
           const isLibro = key === "libro";
           const timerRunning = isLibro && timer.running && timer.dateKey === selected;
-          const act = () => (modal ? setBagOpen(true) : meal ? captureMeal(label) : launch ? openApp(launch) : toggle(key));
+          const act = () => (modal ? setBagOpen(true) : meal ? captureMeal() : launch ? openApp(launch) : toggle(key));
           const bagSub = modal
             ? `${bagItems.filter((it) => data[selected] && data[selected][bagKeyFor(it.id)]).length}/${bagItems.length} ítems`
             : null;
