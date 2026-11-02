@@ -81,9 +81,8 @@ const mochilaFor = (d) =>
     : { key: "mochila", label: "Despejar escritorio", Icon: Eraser, color: "#8FBF8F" };
 
 const habitsForDate = (d) => [
-  // El entrenamiento va primero de todo (antes de la cena) los días que hay.
-  ...(exercisePM(d) ? [exercisePM(d)] : []),
-  // Cerrar persianas: todos los días, después del entrenamiento y antes de la cena.
+  // El ejercicio se movió a la rutina del MEDIODÍA (2026-11-02). Ya no va de noche.
+  // Cerrar persianas: todos los días, antes de la cena.
   { key: "persianas", label: "Cerrar persianas", Icon: Blinds, color: "#9B8CD8" },
   { key: "cena", label: "Cena", Icon: UtensilsCrossed, color: "#E2704F", meal: true, mealLabel: "Abrir chat de Hermes" },
   { key: "boludeo", label: "Lavar los platos", Icon: Utensils, color: "#C9A227" },
