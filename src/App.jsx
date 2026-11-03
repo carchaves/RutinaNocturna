@@ -39,20 +39,17 @@ const C = {
   moonDark: "#0E0D22",
 };
 
-// Ejercicio fuerte de noche, FIJO por día de la semana:
-//   Lun=Calistenia, Mar=Press, Mié=Pierna, Jue=Calistenia, Sáb=Press.
-// Vie y Dom NO tienen ejercicio (ni estiramiento): descanso total.
-const CAL_PM = { key: "ejercicio", label: "Calistenia", Icon: Dumbbell, color: "#E08A3C", launch: "com.rutina.ejercicio", launchLabel: "Abrir app de ejercicio" };
+// Ejercicio de noche: SOLO Press y Pierna (2026-11-03). La Calistenia pasó a la
+// rutina del MEDIODÍA; de noche quedan los días que tocaba Press/Pierna:
+//   Mar=Press, Mié=Pierna, Sáb=Press.
 const PRESS = { key: "ejercicio", label: "Press", Icon: Dumbbell, color: "#E08A3C", launch: "com.rutina.ejercicio", launchLabel: "Abrir app de ejercicio" };
 const PIERNA = { key: "ejercicio", label: "Pierna", Icon: Dumbbell, color: "#E08A3C", launch: "com.rutina.ejercicio", launchLabel: "Abrir app de ejercicio" };
 const EXERCISE_BY_DOW = {
-  1: CAL_PM,  // lunes
   2: PRESS,   // martes
   3: PIERNA,  // miércoles
-  4: CAL_PM,  // jueves
   6: PRESS,   // sábado
 };
-const exercisePM = (d) => EXERCISE_BY_DOW[d.getDay()] || null; // vie/dom: sin ejercicio
+const exercisePM = (d) => EXERCISE_BY_DOW[d.getDay()] || null; // resto: sin ejercicio de noche
 
 // Último paso: depende de si AL DÍA SIGUIENTE voy a la oficina.
 // Oficina por defecto: jueves (4). Puede cambiar semana a semana; para esas
@@ -81,7 +78,8 @@ const mochilaFor = (d) =>
     : { key: "mochila", label: "Despejar escritorio", Icon: Eraser, color: "#8FBF8F" };
 
 const habitsForDate = (d) => [
-  // El ejercicio se movió a la rutina del MEDIODÍA (2026-11-02). Ya no va de noche.
+  // Press/Pierna primero (2026-11-03), los días que corresponda. La Calistenia va al mediodía.
+  ...(exercisePM(d) ? [exercisePM(d)] : []),
   // Cerrar persianas: todos los días, antes de la cena.
   { key: "persianas", label: "Cerrar persianas", Icon: Blinds, color: "#9B8CD8" },
   { key: "cena", label: "Cena", Icon: UtensilsCrossed, color: "#E2704F", meal: true, mealLabel: "Abrir chat de Hermes" },
