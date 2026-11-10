@@ -3,7 +3,7 @@ import {
   UtensilsCrossed, GraduationCap, Utensils, Backpack, Eraser,
   Dumbbell, GlassWater, Pill, Blinds,
   ChevronLeft, ChevronRight, Flame, RotateCcw, Pause,
-  Plus, Trash2, X,
+  Plus, Trash2, X, GripVertical,
 } from "lucide-react";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { AppLauncher } from "@capacitor/app-launcher";
@@ -177,6 +177,9 @@ export default function App() {
   const [bagOpen, setBagOpen] = useState(false);
   const [newItem, setNewItem] = useState("");
   const [loading, setLoading] = useState(true);
+  // Reordenamiento por arrastre (orden por fecha, se reinicia solo cada día).
+  const [liveOrder, setLiveOrder] = useState(null); // array de keys mientras arrastro
+  const dragKeyRef = React.useRef(null);
   // El "día" de la rutina nocturna arranca a las 03:00: si abro la app entre
   // medianoche y las 3 AM, sigo viendo el día anterior (me quedo despierto hasta tarde).
   const today = useMemo(() => {
@@ -362,6 +365,62 @@ export default function App() {
   const selTotal = selHabits.length;
   const isToday = selected === toKey(today);
 
+  // Orden del día: si hay un orden guardado para esta fecha lo aplico; si no,
+  // queda el orden original (por eso cada día nuevo arranca ordenado de fábrica).
+  const orderedHabits = useMemo(() => {
+    const ord = (data[selected] && data[selected].__order) || null;
+    if (!ord) return selHabits;
+    const map = new Map(selHabits.map((h) => [h.key, h]));
+    const out = [];
+    ord.forEach((k) => { if (map.has(k)) { out.push(map.get(k)); map.delete(k); } });
+    selHabits.forEach((h) => { if (map.has(h.key)) out.push(h); });
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, selected, selected && (data[selected] && data[selected].__order), selTotal]);
+
+  // Lista a pintar: la de arrastre en vivo si estoy arrastrando, si no la ordenada.
+  const rows = liveOrder
+    ? liveOrder.map((k) => selHabits.find((h) => h.key === k)).filter(Boolean)
+    : orderedHabits;
+
+  const onHandleDown = (e, key) => {
+    e.stopPropagation();
+    dragKeyRef.current = key;
+    setLiveOrder(orderedHabits.map((h) => h.key));
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+  };
+  const onHandleMove = (e) => {
+    if (!dragKeyRef.current) return;
+    e.preventDefault();
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const row = el && el.closest ? el.closest("[data-habitkey]") : null;
+    if (!row) return;
+    const overKey = row.getAttribute("data-habitkey");
+    if (!overKey || overKey === dragKeyRef.current) return;
+    setLiveOrder((cur) => {
+      if (!cur) return cur;
+      const arr = [...cur];
+      const from = arr.indexOf(dragKeyRef.current);
+      const to = arr.indexOf(overKey);
+      if (from < 0 || to < 0) return cur;
+      arr.splice(from, 1);
+      arr.splice(to, 0, dragKeyRef.current);
+      return arr;
+    });
+  };
+  const onHandleUp = () => {
+    if (!dragKeyRef.current) return;
+    const keys = liveOrder;
+    dragKeyRef.current = null;
+    setLiveOrder(null);
+    if (keys) {
+      const cur = data[selected] || {};
+      const next = { ...data, [selected]: { ...cur, __order: keys } };
+      setData(next);
+      save(next);
+    }
+  };
+
   const weekLabel = `${weekDays[0].toLocaleDateString("es-ES", { day: "numeric" })}–${weekDays[6].toLocaleDateString("es-ES", { day: "numeric", month: "short" })}`;
 
   const reset = async () => {
@@ -416,9 +475,10 @@ export default function App() {
 
       {/* hábitos */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8, position: "relative", zIndex: 1 }}>
-        {selHabits.map((habit) => {
+        {rows.map((habit) => {
           const { key, label, Icon, color, modal, launch, launchLabel, meal, mealLabel } = habit;
           const done = isDone(selected, habit);
+          const dragging = liveOrder && dragKeyRef.current === key;
           const isLibro = key === "libro";
           const timerRunning = isLibro && timer.running && timer.dateKey === selected;
           const act = () => (modal ? setBagOpen(true) : meal ? captureMeal() : launch ? openApp(launch) : toggle(key));
@@ -428,6 +488,7 @@ export default function App() {
           return (
             <div
               key={key}
+              data-habitkey={key}
               className="nr-tap nr-row"
               role={modal || launch || meal ? "button" : "checkbox"}
               aria-checked={modal || launch || meal ? undefined : done}
@@ -437,9 +498,23 @@ export default function App() {
               style={{
                 display: "flex", alignItems: "center", gap: 12,
                 padding: "13px 14px", borderRadius: 14,
-                background: C.panel, border: `1px solid ${done ? color : C.border}`,
+                background: dragging ? C.panelSoft : C.panel,
+                border: `1px solid ${dragging ? C.amber : (done ? color : C.border)}`,
+                boxShadow: dragging ? "0 6px 16px rgba(0,0,0,.35)" : "none",
               }}
             >
+              <span
+                className="nr-tap"
+                aria-label={`Reordenar ${label}`}
+                onPointerDown={(e) => onHandleDown(e, key)}
+                onPointerMove={onHandleMove}
+                onPointerUp={onHandleUp}
+                onPointerCancel={onHandleUp}
+                onClick={(e) => e.stopPropagation()}
+                style={{ display: "grid", placeItems: "center", width: 22, height: 34, marginLeft: -4, touchAction: "none", flexShrink: 0 }}
+              >
+                <GripVertical size={18} color={C.muted} />
+              </span>
               <span style={{ display: "grid", placeItems: "center", width: 34, height: 34, borderRadius: 10, background: done ? color : C.panelSoft, transition: "background .2s" }}>
                 <Icon size={18} color={done ? C.bg : color} strokeWidth={2} />
               </span>
